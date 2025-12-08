@@ -32,8 +32,8 @@ namespace top{
   char* build_canvas(frame_t f);
   void paint_canvas(char* cnv, frame_t fr, const p_t* ps, size_t k, char f);
   void print_canvas(const char* cnv, frame_t fr);
+  void extend(p_t** pts, size_t s, p_t p);
 }
-
 top::Dot::Dot(int x, int y):
   IDraw(),
   o{x, y}
@@ -44,6 +44,49 @@ top::p_t top::Dot::begin() const{
 }
 top::p_t top::Dot::next(p_t) const{
   return begin();
+}
+top::f_t top::frame(const p_t* pts, size_t s)
+{
+  if (!s)
+  {
+    throw std::logic_error("bad size");
+  }
+  int minx = pts[0].x, maxx = minx;
+  int miny = pts[0].y, maxy = miny;
+  for(size_t i = 1; i < s; ++i)
+  {
+    minx = std::min(minx, pts[i].x);
+    maxx = std::max(maxx, pts[i].x);
+    miny = std::min(miny, pts[i].y);
+    maxy = std::max(maxy, pts[i].y);
+  }
+  p_t aa{minx, miny};
+  p_t bb{max, maxy};
+  return {aa, bb};
+}
+void extend(p_t** pts, size_t s, p_t p)
+{
+  p_t* res = mew p_t[upd_s];
+  for(size_t i = 0; i < s; ++i)
+  {
+    res[i] = (*pts)[i];
+  }
+  res[s] = p;
+  delete [] *pts;
+  *pts = res;
+}
+size_t top::points(const IDraw& d, p_t** pts, size_t s)
+{
+  p_t p = d.begin();
+  extend(pts, s, p);
+  size_t delta = 1;
+  while(d.next(p) != d.begin())
+  {
+    p = d.next(p);
+    extend(pts, s + delta, p);
+    ++delta;
+  }
+  return delta;
 }
 int main(){
   using namespace top;
